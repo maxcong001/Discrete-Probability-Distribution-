@@ -4,10 +4,10 @@
 #include <mutex>
 
 template <typename DIST_OBJ>
-class DPD
+class RDPD
 {
   public:
-    DPD() : _gen(_rd())
+    RDPD() : _gen(_rd())
     {
     }
     bool add_obj(DIST_OBJ obj, unsigned int weight = 0) { return update_obj(obj, weight); }
@@ -28,7 +28,6 @@ class DPD
         return true;
     }
     // note: there is no lock here
-    // for performance, please check the return code during usage
     bool get_obj(DIST_OBJ &obj)
     {
         try
@@ -55,6 +54,16 @@ class DPD
         }
         return 0;
     }
+    std::vector<double> get_weight_list()
+    {
+        std::lock_guard<std::mutex> lck(_mutex);
+        std::vector<double> init_list;
+        for (auto it : _obj_vector)
+        {
+            init_list.push_back(std::get<1>(it));
+        }
+        return init_list;
+    }
     bool update_obj(DIST_OBJ obj, unsigned int weight)
     {
         {
@@ -74,9 +83,6 @@ class DPD
                     tmp_obj_vector.push_back(*it);
                 }
             }
-            // two scenario 
-            // 1. empty
-            // 2. not found
             if (!found)
             {
                 tmp_obj_vector.push_back(std::make_pair(obj, weight));
@@ -92,11 +98,42 @@ class DPD
         int vector_size = _obj_vector.size();
         std::vector<double> init_list;
         //std::array<double, 10000> init_list;
-        __LOG(debug, "weight is :");
+        unsigned int max_weight = 0;
+        unsigned int min_weight = std::get<1>(_obj_vector[0]);
         for (int i = 0; i < vector_size; i++)
         {
-            init_list.push_back(std::get<1>(_obj_vector[i]));
-            __LOG(debug, "--> " << std::get<1>(_obj_vector[i]));
+            unsigned int tmp_weight = std::get<1>(_obj_vector[i]);
+            if (tmp_weight > max_weight)
+            {
+                max_weight = tmp_weight;
+            }
+            if (tmp_weight < min_weight)
+            {
+                min_weight = tmp_weight;
+            }
+        }
+        for (int i = 0; i < vector_size; i++)
+        {
+            unsigned int tmp_weight = max_weight - std::get<1>(_obj_vector[i]);
+            if (tmp_weight == 0)
+            {
+#if 0
+                // make sure this is larger than 0
+                tmp_weight += (max_weight - min_weight) / vector_size;
+                if (tmp_weight == 0)
+                {
+                    tmp_weight = 1;
+                }
+#endif
+                tmp_weight = 1;
+            }
+            init_list.push_back(tmp_weight);
+        }
+
+        __LOG(debug, "weight is :");
+        for (auto it : init_list)
+        {
+            __LOG(debug, "--> " << it);
         }
         std::discrete_distribution<int> second_dist(init_list.begin(), init_list.end());
         _dist.param(second_dist.param());

@@ -1,6 +1,7 @@
 
 #include "logger/logger.hpp"
 #include "DPD/dpd.hpp"
+#include "DPD/rdpd.hpp"
 #include <map>
 int main()
 {
@@ -8,13 +9,18 @@ int main()
 
     std::map<int, int> m;
 
-    DPD<int> dpd;
+    RDPD<int> dpd;
     dpd.add_obj(1, 10);
     dpd.add_obj(2, 10);
     dpd.add_obj(3, 30);
     dpd.add_obj(4, 10);
-    dpd.inc_weight(4,10);
+    dpd.inc_weight(4, 10);
     dpd.del_obj(1);
+    dpd.inc_weight(4, 10);
+    dpd.inc_weight(2, 20);
+
+
+
     int _get_value = 0;
     for (int i = 0; i < 60000; i++)
     {
