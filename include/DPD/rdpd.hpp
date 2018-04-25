@@ -112,22 +112,18 @@ class RDPD
                 min_weight = tmp_weight;
             }
         }
+
         for (int i = 0; i < vector_size; i++)
         {
-            unsigned int tmp_weight = max_weight - std::get<1>(_obj_vector[i]);
-            if (tmp_weight == 0)
+            if (max_weight == min_weight)
             {
-#if 0
-                // make sure this is larger than 0
-                tmp_weight += (max_weight - min_weight) / vector_size;
-                if (tmp_weight == 0)
-                {
-                    tmp_weight = 1;
-                }
-#endif
-                tmp_weight = 1;
+                init_list.push_back(1);
             }
-            init_list.push_back(tmp_weight);
+            else
+            {
+                unsigned int tmp_weight = max_weight - std::get<1>(_obj_vector[i]);
+                init_list.push_back(tmp_weight);
+            }
         }
 
         __LOG(debug, "weight is :");

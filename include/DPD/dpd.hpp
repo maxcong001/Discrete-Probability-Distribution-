@@ -55,6 +55,16 @@ class DPD
         }
         return 0;
     }
+    std::vector<double> get_weight_list()
+    {
+        std::lock_guard<std::mutex> lck(_mutex);
+        std::vector<double> init_list;
+        for (auto it : _obj_vector)
+        {
+            init_list.push_back(std::get<1>(it));
+        }
+        return init_list;
+    }
     bool update_obj(DIST_OBJ obj, unsigned int weight)
     {
         {
@@ -74,7 +84,7 @@ class DPD
                     tmp_obj_vector.push_back(*it);
                 }
             }
-            // two scenario 
+            // two scenario
             // 1. empty
             // 2. not found
             if (!found)
